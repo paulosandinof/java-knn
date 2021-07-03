@@ -26,7 +26,7 @@ public class App {
         }
     }
 
-    private static void printDataset(double[][] dataset) {
+    public static void printDataset(double[][] dataset) {
         for (int i = 0; i < dataset.length; i++) {
             System.out.print("[ ");
             for (double cell : dataset[i]) {
@@ -37,7 +37,7 @@ public class App {
         }
     }
 
-    private static void sortByColumn(double array[][], int col) {
+    public static void sortByColumn(double array[][], int col) {
         // Using built-in sort function Arrays.sort
         Arrays.sort(array, new Comparator<double[]>() {
 
@@ -55,11 +55,11 @@ public class App {
         }); // End of function call sort().
     }
 
-    private static double stringToDouble(String string) {
+    public static double stringToDouble(String string) {
         return string.isEmpty() ? 0.0 : Double.parseDouble(string);
     }
 
-    private static double classToDouble(String string) {
+    public static double classToDouble(String string) {
         return CodRenda.valueOf(string).getIndex();
     }
 
@@ -131,6 +131,8 @@ public class App {
 
         double[][] neighbors = getNeighbors(train, testRow, k);
 
+        printDataset(neighbors);
+
         Map<Double, Integer> frequencyMap = new HashMap<>();
 
         for (double[] row : neighbors) {
@@ -150,21 +152,15 @@ public class App {
     }
 
     public static void main(String[] args) throws IOException {
-        String filename = "src/main/resources/dataset.csv";
-
+        
+        String filename = "/home/sandino/Documents/dataset.csv";
+        
         double[][] dataset = loadDataset(filename);
-
-        // double[][] dataset = { { 2.7810836, 2.550537003, 0 }, { 1.465489372,
-        // 2.362125076, 0 },
-        // { 3.396561688, 4.400293529, 0 }, { 1.38807019, 1.850220317, 0 }, {
-        // 3.06407232, 3.005305973, 0 },
-        // { 7.627531214, 2.759262235, 1 }, { 5.332441248, 2.088626775, 1 }, {
-        // 6.922596716, 1.77106367, 1 },
-        // { 8.675418651, -0.242068655, 1 }, { 7.673756466, 3.508563011, 1 } };
-
+        
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 
-        int k = (int) Math.sqrt(dataset.length);
+        // int k = (int) Math.sqrt(dataset.length);
+        int k = 10;
 
         double prediction = predictClassification(dataset, initialRow, k);
 
