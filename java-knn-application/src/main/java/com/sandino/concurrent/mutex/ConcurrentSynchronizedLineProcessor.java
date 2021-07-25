@@ -1,4 +1,4 @@
-package com.sandino;
+package com.sandino.concurrent.mutex;
 
 import java.util.ArrayList;
 import java.util.Arrays;

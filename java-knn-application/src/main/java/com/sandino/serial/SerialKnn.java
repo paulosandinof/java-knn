@@ -1,4 +1,4 @@
-package com.sandino;
+package com.sandino.serial;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -79,7 +79,7 @@ public class SerialKnn {
 
     public static void main(String[] args) {
 
-        SerialKnn knn = new SerialKnn("/home/sandino/Documents/data.csv");
+        SerialKnn knn = new SerialKnn("data.csv");
 
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 

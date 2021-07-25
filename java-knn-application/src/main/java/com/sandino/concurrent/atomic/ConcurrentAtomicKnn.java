@@ -1,4 +1,4 @@
-package com.sandino;
+package com.sandino.concurrent.atomic;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,32 +11,36 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sandino.utils.DatasetUtils;
 
-public class ConcurrentSynchronizedKnn {
+public class ConcurrentAtomicKnn {
 
     private String filename;
     private int numberOfThreads;
     private int chunkSize;
-    private int numberOfLines;
 
-    public ConcurrentSynchronizedKnn(String filename, int numberOfThreads, int chunkSize) {
+    private AtomicBoolean flag;
+
+    public ConcurrentAtomicKnn(String filename, int numberOfThreads, int chunkSize) {
         this.filename = filename;
         this.numberOfThreads = numberOfThreads;
         this.chunkSize = chunkSize;
-        this.numberOfLines = 0;
+        this.flag = new AtomicBoolean(false);
     }
 
     private double[][] loadDataset(double[] testRow, int k) {
         List<String> lines = new ArrayList<>();
 
-        List<double[]> dataset = new ArrayList<>();
+        Queue<double[]> dataset = new ConcurrentLinkedQueue<>();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filename))) {
 
@@ -51,7 +55,8 @@ public class ConcurrentSynchronizedKnn {
                 lines.add(line);
 
                 if (lineCounter % chunkSize == 0) {
-                    ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines, testRow, k, dataset);
+                    ConcurrentAtomicLineProcessor processor = new ConcurrentAtomicLineProcessor(lines, testRow, k,
+                            dataset, flag);
 
                     executorService.submit(processor);
 
@@ -59,7 +64,8 @@ public class ConcurrentSynchronizedKnn {
                 }
             }
 
-            ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines, testRow, k, dataset);
+            ConcurrentAtomicLineProcessor processor = new ConcurrentAtomicLineProcessor(lines, testRow, k, dataset,
+                    flag);
 
             executorService.submit(processor);
 
@@ -78,8 +84,6 @@ public class ConcurrentSynchronizedKnn {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
-
-        numberOfLines = dataset.size();
 
         return dataset.toArray(new double[0][]);
     }
@@ -112,12 +116,8 @@ public class ConcurrentSynchronizedKnn {
         return Collections.max(frequencyMap.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
-    public int getNumberOfLines() {
-        return this.numberOfLines;
-    }
-
     public static void main(String[] args) {
-        ConcurrentSynchronizedKnn knn = new ConcurrentSynchronizedKnn("/home/sandino/Documents/data.csv", 512, 10000);
+        ConcurrentAtomicKnn knn = new ConcurrentAtomicKnn("data.csv", 5, 10000);
 
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 

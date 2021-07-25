@@ -2,7 +2,8 @@ package com.sandino;
 
 import java.util.concurrent.TimeUnit;
 
-import com.sandino.serial.SerialKnn;
+import com.sandino.concurrent.atomic.ConcurrentAtomicKnn;
+import com.sandino.concurrent.mutex.ConcurrentSynchronizedKnn;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -25,23 +26,35 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
 @State(Scope.Benchmark)
-public class SerialKnnJMHTest {
+public class ImplementationsComparatorTest {
 
     private String filename = "data.csv";
-
+    
     private double[] testRow = { 600, 600, 600, 600, 600 };
 
-    @Param({ "10", "100", "1000", "10000" })
-    private int k = 1000;
+    @Param({ "2", "64" })
+    private int numberOfThreads;
 
-    @Benchmark
-    public double test() {
-        SerialKnn serialKnn = new SerialKnn(filename);
-        return serialKnn.predictClassification(testRow, k);
+    @Param({ "1000"})
+    private int chunkSize;
+
+    @Param({ "1000" })
+    private int k;
+
+    @Benchmark                 
+    public double synchronizedTest() {
+        ConcurrentSynchronizedKnn concurrentKnn = new ConcurrentSynchronizedKnn(filename, numberOfThreads, chunkSize);
+        return concurrentKnn.predictClassification(testRow, k);
+    }
+
+    @Benchmark                 
+    public double atomicTest() {
+        ConcurrentAtomicKnn concurrentKnn = new ConcurrentAtomicKnn(filename, numberOfThreads, chunkSize);
+        return concurrentKnn.predictClassification(testRow, k);
     }
 
     public static void main(String[] args) throws RunnerException {
-        Options opt = new OptionsBuilder().include(SerialKnnJMHTest.class.getSimpleName()).build();
+        Options opt = new OptionsBuilder().include(ImplementationsComparatorTest.class.getSimpleName()).build();
 
         new Runner(opt).run();
     }

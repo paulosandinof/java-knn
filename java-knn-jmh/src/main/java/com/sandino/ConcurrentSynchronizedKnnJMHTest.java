@@ -2,6 +2,8 @@ package com.sandino;
 
 import java.util.concurrent.TimeUnit;
 
+import com.sandino.concurrent.mutex.ConcurrentSynchronizedKnn;
+
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -25,14 +27,15 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @State(Scope.Benchmark)
 public class ConcurrentSynchronizedKnnJMHTest {
 
-    private String filename = "/home/sandino/Documents/data.csv";
+    private String filename = "data.csv";
     
     private double[] testRow = { 600, 600, 600, 600, 600 };
 
     @Param({ "1", "2", "4", "6", "8", "12", "16", "24", "32", "64" })
     private int numberOfThreads;
 
-    @Param({ "1", "10", "100", "1000", "10000", "100000", "1000000" })
+    // @Param({ "1", "10", "100", "1000", "10000", "100000", "1000000" })
+    @Param("1000")
     private int chunkSize;
 
     @Param({ "1000" })
