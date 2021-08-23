@@ -41,13 +41,11 @@ public class ConcurrentCallableKnn {
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filename))) {
-
             int lineCounter = 0;
 
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
-
                 lineCounter++;
 
                 lines.add(line);
@@ -63,11 +61,13 @@ public class ConcurrentCallableKnn {
                 }
             }
 
-            ConcurrentCallableLineProcessor processor = new ConcurrentCallableLineProcessor(lines, testRow, k);
+            if (!lines.isEmpty()) {
+                ConcurrentCallableLineProcessor processor = new ConcurrentCallableLineProcessor(lines, testRow, k);
 
-            Future<List<double[]>> task = executorService.submit(processor);
+                Future<List<double[]>> task = executorService.submit(processor);
 
-            futures.add(task);
+                futures.add(task);
+            }
 
             for (Future<List<double[]>> future : futures) {
                 dataset.addAll(future.get());
@@ -81,15 +81,12 @@ public class ConcurrentCallableKnn {
                     System.err.println("executorService did not terminate");
                 }
             }
-
         } catch (IOException | ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException ie) {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
-
-        System.out.println(dataset.size());
 
         return dataset.toArray(new double[0][]);
     }
@@ -123,11 +120,11 @@ public class ConcurrentCallableKnn {
     }
 
     public static void main(String[] args) {
-        ConcurrentCallableKnn knn = new ConcurrentCallableKnn("data.csv", 4, 10000);
+        ConcurrentCallableKnn knn = new ConcurrentCallableKnn("datatrain.csv", 1, 1);
 
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 
-        int k = 1000;
+        int k = 19;
 
         Instant start = Instant.now();
 

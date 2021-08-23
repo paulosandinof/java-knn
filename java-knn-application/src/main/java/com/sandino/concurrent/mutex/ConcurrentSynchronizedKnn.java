@@ -37,19 +37,18 @@ public class ConcurrentSynchronizedKnn {
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filename))) {
-
             int lineCounter = 0;
 
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
-
                 lineCounter++;
 
                 lines.add(line);
 
                 if (lineCounter % chunkSize == 0) {
-                    ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines, testRow, k, dataset);
+                    ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines,
+                            testRow, k, dataset);
 
                     executorService.submit(processor);
 
@@ -57,10 +56,13 @@ public class ConcurrentSynchronizedKnn {
                 }
             }
 
-            ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines, testRow, k, dataset);
+            if (!lines.isEmpty()) {
+                ConcurrentSynchronizedLineProcessor processor = new ConcurrentSynchronizedLineProcessor(lines, testRow,
+                        k, dataset);
 
-            executorService.submit(processor);
-
+                executorService.submit(processor);
+            }
+            
             executorService.shutdown();
 
             if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
@@ -69,7 +71,6 @@ public class ConcurrentSynchronizedKnn {
                     System.err.println("executorService did not terminate");
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException ie) {

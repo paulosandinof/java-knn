@@ -29,6 +29,11 @@
 
     <dependencies>
         <dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+			<version>3.4.9</version>
+		</dependency>
+        <dependency>
             <groupId>org.openjdk.jcstress</groupId>
             <artifactId>jcstress-core</artifactId>
             <version>${jcstress.version}</version>

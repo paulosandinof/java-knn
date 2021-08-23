@@ -22,7 +22,6 @@ public class ConcurrentSynchronizedLineProcessor implements Runnable {
 
     @Override
     public void run() {
-
         List<double[]> partialDataset = new ArrayList<>();
 
         for (String line : lines) {

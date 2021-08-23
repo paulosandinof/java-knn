@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,7 +40,7 @@ public class ConcurrentAtomicKnn {
 
         Queue<double[]> dataset = new ConcurrentLinkedQueue<>();
 
-        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filename))) {
 
@@ -64,10 +64,12 @@ public class ConcurrentAtomicKnn {
                 }
             }
 
-            ConcurrentAtomicLineProcessor processor = new ConcurrentAtomicLineProcessor(lines, testRow, k, dataset,
-                    flag);
+            if (!lines.isEmpty()) {
+                ConcurrentAtomicLineProcessor processor = new ConcurrentAtomicLineProcessor(lines, testRow, k, dataset,
+                        flag);
 
-            executorService.submit(processor);
+                executorService.submit(processor);
+            }
 
             executorService.shutdown();
 
@@ -117,7 +119,7 @@ public class ConcurrentAtomicKnn {
     }
 
     public static void main(String[] args) {
-        ConcurrentAtomicKnn knn = new ConcurrentAtomicKnn("data.csv", 5, 10000);
+        ConcurrentAtomicKnn knn = new ConcurrentAtomicKnn("data.csv", 1, 1);
 
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.sandino.utils.DatasetUtils;
@@ -35,7 +35,7 @@ public class ConcurrentForkJoinKnn {
 
         List<double[]> dataset = new ArrayList<>();
 
-        List<ForkJoinTask<List<double[]>>> futures = new ArrayList<>();
+        List<Future<List<double[]>>> futures = new ArrayList<>();
 
         ForkJoinPool forkJoinPool = new ForkJoinPool(numberOfThreads);
 
@@ -54,7 +54,7 @@ public class ConcurrentForkJoinKnn {
                 if (lineCounter % chunkSize == 0) {
                     ConcurrentForkJoinLineProcessor processor = new ConcurrentForkJoinLineProcessor(lines, testRow, k);
 
-                    ForkJoinTask<List<double[]>> task = forkJoinPool.submit(processor);
+                    Future<List<double[]>> task = forkJoinPool.submit(processor);
 
                     futures.add(task);
 
@@ -62,13 +62,15 @@ public class ConcurrentForkJoinKnn {
                 }
             }
 
-            ConcurrentForkJoinLineProcessor processor = new ConcurrentForkJoinLineProcessor(lines, testRow, k);
+            if (!lines.isEmpty()) {
+                ConcurrentForkJoinLineProcessor processor = new ConcurrentForkJoinLineProcessor(lines, testRow, k);
 
-            ForkJoinTask<List<double[]>> task = forkJoinPool.submit(processor);
+                Future<List<double[]>> task = forkJoinPool.submit(processor);
 
-            futures.add(task);
+                futures.add(task);
+            }
 
-            for (ForkJoinTask<List<double[]>> future : futures) {
+            for (Future<List<double[]>> future : futures) {
                 dataset.addAll(future.get());
             }
 
@@ -87,8 +89,6 @@ public class ConcurrentForkJoinKnn {
             forkJoinPool.shutdownNow();
             Thread.currentThread().interrupt();
         }
-
-        System.out.println(dataset.size());
 
         return dataset.toArray(new double[0][]);
     }

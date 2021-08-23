@@ -1,4 +1,4 @@
-package com.sandino.concurrent.parallelstream;
+package com.sandino.concurrent.reactor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,28 +6,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.sandino.utils.DatasetUtils;
 
-public class ConcurrentParallelStreamKnn {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.ParallelFlux;
+import reactor.core.scheduler.Schedulers;
+
+public class ConcurrentReactorKnn {
 
     private String filename;
     private int numberOfThreads;
 
-    public ConcurrentParallelStreamKnn(String filename, int numberOfThreads) {
+    public ConcurrentReactorKnn(String filename, int numberOfThreads) {
         this.filename = filename;
         this.numberOfThreads = numberOfThreads;
     }
 
-    private Function<String, double[]> lineProcessor(double[] testRow) {
+    private static Function<String, double[]> lineProcessor(double[] testRow) {
         return line -> {
             String[] data = line.split(",");
 
@@ -45,35 +46,24 @@ public class ConcurrentParallelStreamKnn {
         };
     }
 
-    private double[][] loadDataset(double[] testRow) {
-        List<double[]> dataset = new ArrayList<>();
-
+    private ParallelFlux<double[]> loadDataset(double[] testRow) throws IOException {
         Path path = Paths.get(filename);
 
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", String.valueOf(numberOfThreads));
+        Stream<String> lines = Files.lines(path);
 
-        try (Stream<String> lines = Files.lines(path)) {
-
-            dataset = lines.parallel().map(lineProcessor(testRow))
-                    .sorted((entry1, entry2) -> Double.compare(entry1[6], entry2[6])).toList();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return dataset.toArray(new double[0][]);
+        return Flux.fromStream(lines).parallel(numberOfThreads).runOn(Schedulers.parallel()).map(lineProcessor(testRow));
     }
 
-    private double[][] getNeighbors(double[] testRow, int k) {
-        double[][] dataset = loadDataset(testRow);
+    private Flux<double[]> getNeighbors(double[] testRow, int k) throws IOException {
+        ParallelFlux<double[]> datasetFlux = loadDataset(testRow);
 
-        return Arrays.copyOf(dataset, k);
+        return datasetFlux.sorted((entry1, entry2) -> Double.compare(entry1[6], entry2[6])).take(k);
     }
 
-    public double predictClassification(double[] testRow, int k) {
-        double[][] neighbors = getNeighbors(testRow, k);
+    public double predictClassification(double[] testRow, int k) throws IOException {
+        Iterable<double[]> neighbors = getNeighbors(testRow, k).toIterable();
 
-        int classCol = neighbors[0].length - 2;
+        int classCol = 5;
 
         Map<Double, Integer> frequencyMap = new HashMap<>();
 
@@ -88,12 +78,12 @@ public class ConcurrentParallelStreamKnn {
         return Collections.max(frequencyMap.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
-    public static void main(String[] args) {
-        ConcurrentParallelStreamKnn knn = new ConcurrentParallelStreamKnn("datatrain.csv", 2);
+    public static void main(String[] args) throws IOException {
+        ConcurrentReactorKnn knn = new ConcurrentReactorKnn("data.csv", 1);
 
         double[] initialRow = { 600, 600, 600, 600, 600, 600 };
 
-        int k = 19;
+        int k = 10;
 
         Instant start = Instant.now();
 

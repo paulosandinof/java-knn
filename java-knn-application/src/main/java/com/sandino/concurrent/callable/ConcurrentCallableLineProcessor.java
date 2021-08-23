@@ -40,7 +40,7 @@ public class ConcurrentCallableLineProcessor implements Callable<List<double[]>>
         }
 
         double[][] convertedPartialDataset = partialDataset.toArray(new double[0][]);
-
+        
         DatasetUtils.sortByColumn(convertedPartialDataset, convertedPartialDataset[0].length - 1);
 
         if (k > convertedPartialDataset.length) {
