@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sandino.utils.DatasetUtils;
@@ -55,7 +56,7 @@ public class ConcurrentParallelStreamKnn {
         try (Stream<String> lines = Files.lines(path)) {
 
             dataset = lines.parallel().map(lineProcessor(testRow))
-                    .sorted((entry1, entry2) -> Double.compare(entry1[6], entry2[6])).toList();
+                    .sorted((entry1, entry2) -> Double.compare(entry1[6], entry2[6])).collect(Collectors.toList());
 
         } catch (IOException e) {
             e.printStackTrace();
