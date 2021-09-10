@@ -1,13 +1,21 @@
-# java-knn
+# Java KNN
 
-Number of lines: 5095270
+This repository is a study for comparing different threading paradigms in Java.
 
-## Run JCStress
+The K-nearest neighbor algorithm was used to process a dataset with the information about grades of the Brazilian National Exam. The main goal is predict the average income of a student based on a its grades in the exam.
+
+The algorithm was implemented in a serial way, and converted to differents versions using traditional Java threads with mutexes, busy wait with atomic variables, Java executors, callables and futures, fork join framework, reactor and Apache Spark.
+
+All the different implementations were tested using the Java Microbenchmark Harness, JCStress and Apache JMeter.
+
+You can run the codes and the JMH tests normally on your IDE.
+
+## To Run JCStress Tests
 ```bash
 java -jar java-knn-jcstress/target/jcstress.jar -r java-knn-jcstress/reports
 ```
 
-## Run JMeter
+## To Run JMeter Tests
 
 - Copy tests to JMeter folder
 ```bash
